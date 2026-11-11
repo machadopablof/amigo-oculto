@@ -24,13 +24,17 @@ Para usar outra planilha, troque `SHEET_ID` no `index.html`.
 
 GitHub → Settings → Pages → Deploy from a branch → escolha a branch e a pasta `/ (root)`.
 
-## Google Forms (opcional)
+## Google Forms
 
-1. Crie um formulário com as perguntas **Nome** (lista suspensa com os participantes),
-   **Presente 1**, **Link 1**, **Presente 2**, **Link 2**... (resposta curta; só o Nome obrigatório).
-2. Em **Respostas → Vincular ao Planilhas → Selecionar planilha existente**, escolha esta planilha.
-   O Forms cria a aba `Respostas ao formulário 1`, que o site também lê.
-3. No `index.html`, preencha `FORM_URL` com o link do formulário. Para um botão "+ sugerir"
-   em cada pessoa, gere um link pré-preenchido com `NOME` no campo Nome e cole em `FORM_PREFILL_URL`.
+O formulário é criado pelo script `criar-formulario.gs`, rodado uma vez dentro da planilha:
 
-Para corrigir ou apagar uma sugestão enviada pelo formulário, edite a aba de respostas na planilha.
+1. Planilha → **Extensões → Apps Script**.
+2. Apague o conteúdo do editor, cole o `criar-formulario.gs` inteiro e salve.
+3. Escolha a função `criarFormulario` → **Executar** → autorize.
+
+O script cria o formulário (Nome em lista + 3 pares Presente/Link), vincula as respostas à aba
+`Respostas` e grava os links na aba `Config`. O site lê essa aba: o botão "Adicionar minhas
+sugestões" abre o formulário, e cada pessoa ganha um botão "+ sugerir" com o nome já escolhido.
+
+Para incluir um participante: adicione o nome na aba `Presentes` e rode `atualizarNomes`.
+Para corrigir ou apagar uma sugestão enviada, edite a aba `Respostas`.

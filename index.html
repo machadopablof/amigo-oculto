@@ -108,17 +108,32 @@ const REFRESH_MS = 60 * 1000;
  * FORM_PREFILL_URL: link "pré-preenchido" do formulário com NOME escrito no campo Nome.
  *   Cada participante ganha um botão que já abre o formulário com o nome dele.
  * RESPONSES_TAB: aba que o Forms cria na planilha ao vincular as respostas.
+ * Esses valores também podem vir da aba "Config" da planilha (o script
+ * criar-formulario.gs preenche essa aba sozinho), que tem prioridade sobre os daqui.
  */
 const FORM_URL = "";
 const FORM_PREFILL_URL = "";
 const RESPONSES_TAB = "Respostas ao formulário 1";
+const CONFIG_TAB = "Config";
+
+const cfg = { form_url: FORM_URL, prefill_url: FORM_PREFILL_URL, responses_tab: RESPONSES_TAB };
 
 const csvUrl = (tab) => "https://docs.google.com/spreadsheets/d/" + SHEET_ID +
   "/gviz/tq?tqx=out:csv&sheet=" + encodeURIComponent(tab);
 const EDIT_URL = "https://docs.google.com/spreadsheets/d/" + SHEET_ID + "/edit";
 
 const $ = (id) => document.getElementById(id);
-$("edit-link").href = FORM_URL || EDIT_URL;
+const setEditLink = () => { $("edit-link").href = cfg.form_url || EDIT_URL; };
+setEditLink();
+
+function applyConfig(rows) {
+  for (const r of rows) {
+    const key = norm(r[0] || "").replace(/\s+/g, "_");
+    const val = (r[1] || "").trim();
+    if (key in cfg && val && (key === "responses_tab" || /^https:\/\/(docs\.google\.com|forms\.gle)\//.test(val))) cfg[key] = val;
+  }
+  setEditLink();
+}
 
 function parseCSV(text) {
   const rows = [];
@@ -219,9 +234,9 @@ function render(people) {
     const li = el("li", "person" + (p.gifts.length ? "" : " empty"));
     const head = el("div", "head");
     head.append(el("h2", null, p.name));
-    if (FORM_PREFILL_URL) {
+    if (cfg.prefill_url) {
       const add = el("a", "add", "+ sugerir");
-      add.href = FORM_PREFILL_URL.replace("NOME", encodeURIComponent(p.name));
+      add.href = cfg.prefill_url.replace("NOME", encodeURIComponent(p.name));
       add.target = "_blank"; add.rel = "noopener";
       add.setAttribute("aria-label", "Adicionar sugestões de " + p.name);
       head.append(add);
@@ -266,9 +281,10 @@ async function load() {
     return parseCSV(text);
   };
   try {
+    applyConfig(await fetchTab(CONFIG_TAB).catch(() => []));
     const [base, responses] = await Promise.all([
       fetchTab(SHEET_TAB),
-      RESPONSES_TAB ? fetchTab(RESPONSES_TAB).catch(() => []) : Promise.resolve([])
+      cfg.responses_tab ? fetchTab(cfg.responses_tab).catch(() => []) : Promise.resolve([])
     ]);
     const people = toPeople([base, responses]);
     render(people);
