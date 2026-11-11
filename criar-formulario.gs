@@ -64,7 +64,14 @@ function criarFormulario() {
     try { form.removeDestination(); } catch (e) {}
     form.setDestination(FormApp.DestinationType.SPREADSHEET, ss.getId());
   }
-  form.setAcceptingResponses(true);
+  // Formulários novos nascem como rascunho: publica antes de abrir para respostas.
+  try {
+    if (typeof form.isPublished === 'function' && !form.isPublished()) form.setPublished(true);
+  } catch (e) {
+    throw new Error('Não consegui publicar o formulário. Abra o formulário, clique em "Publicar" ' +
+      'no canto superior direito e rode o script de novo. (' + e.message + ')');
+  }
+  try { form.setAcceptingResponses(true); } catch (e) { Logger.log('Aviso: ' + e.message); }
   SpreadsheetApp.flush();
   Utilities.sleep(3000);
 
