@@ -17,6 +17,9 @@
  * Para incluir alguém novo, adicione o nome na aba Presentes e rode atualizarNomes.
  */
 
+// Planilha da lista de presentes.
+const SHEET_ID = '1X9mC3HA2twC6HrUx4U5Kei5QBo5o0_qY4nrX5s87qUM';
+
 // Formulário que você criou. Deixe vazio ('') para o script criar um novo.
 const FORM_ID = '1BcN92igTrtI7cQS_vjzlnN68iDQsAvYKVNavwo_jNCU';
 
@@ -26,7 +29,7 @@ const ABA_CONFIG = 'Config';
 const QTD_PRESENTES = 3;
 
 function criarFormulario() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = planilha_();
   const nomes = lerNomes_(ss);
   if (!nomes.length) throw new Error('Nenhum nome na aba ' + ABA_PARTICIPANTES + '.');
 
@@ -102,7 +105,7 @@ function criarFormulario() {
 
   Logger.log('Formulário para enviar ao grupo: ' + linkForm);
   Logger.log('Editar o formulário: ' + form.getEditUrl());
-  SpreadsheetApp.getUi().alert(
+  avisar_(
     'Formulário pronto e vinculado à planilha!\n\nLink para o grupo:\n' + linkForm +
     '\n\nO link também ficou na aba "' + ABA_CONFIG + '".'
   );
@@ -110,14 +113,14 @@ function criarFormulario() {
 
 /** Atualiza a lista de nomes do formulário com os nomes da aba Presentes. */
 function atualizarNomes() {
-  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = planilha_();
   const config = lerConfig_(ss);
   if (!config.form_edit_url) throw new Error('Rode criarFormulario primeiro.');
   const form = FormApp.openByUrl(config.form_edit_url);
   const campo = form.getItems(FormApp.ItemType.LIST)
     .find(function (it) { return it.getTitle() === 'Nome'; });
   campo.asListItem().setChoiceValues(lerNomes_(ss));
-  SpreadsheetApp.getUi().alert('Nomes atualizados no formulário.');
+  avisar_('Nomes atualizados no formulário.');
 }
 
 function lerNomes_(ss) {
@@ -150,4 +153,13 @@ function lerConfig_(ss) {
   if (!aba) return out;
   aba.getDataRange().getValues().forEach(function (r) { out[String(r[0])] = String(r[1]); });
   return out;
+}
+
+function planilha_() {
+  return SpreadsheetApp.openById(SHEET_ID);
+}
+
+function avisar_(msg) {
+  Logger.log(msg);
+  try { SpreadsheetApp.getUi().alert(msg); } catch (e) { /* aberto fora da planilha: veja o Registro de execução */ }
 }
