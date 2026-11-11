@@ -32,7 +32,7 @@ O formulário é criado pelo script `criar-formulario.gs`, rodado uma vez dentro
 2. Apague o conteúdo do editor, cole o `criar-formulario.gs` inteiro e salve.
 3. Escolha a função `criarFormulario` → **Executar** → autorize.
 
-O script cria o formulário (Nome em lista + 3 pares Presente/Link), vincula as respostas à aba
+O script usa o formulário de `FORM_ID` (ou cria um, se estiver vazio): coloca Nome em lista + 3 pares Presente/Link), vincula as respostas à aba
 `Respostas` e grava os links na aba `Config`. O site lê essa aba: o botão "Adicionar minhas
 sugestões" abre o formulário, e cada pessoa ganha um botão "+ sugerir" com o nome já escolhido.
 

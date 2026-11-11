@@ -1,5 +1,5 @@
 /**
- * Cria o Google Forms do amigo oculto e vincula à planilha.
+ * Monta o Google Forms do amigo oculto e vincula à planilha.
  *
  * Como usar (uma vez só):
  * 1. Abra a planilha → Extensões → Apps Script.
@@ -7,14 +7,18 @@
  * 3. Escolha a função criarFormulario e clique em Executar. Autorize quando o Google pedir.
  *
  * O script:
- * - cria o formulário com o campo Nome (lista com os nomes da aba Presentes)
+ * - usa o formulário de FORM_ID (ou cria um novo, se FORM_ID estiver vazio), apaga as
+ *   perguntas que houver nele e coloca o campo Nome (lista com os nomes da aba Presentes)
  *   e 3 pares Presente/Link;
  * - envia as respostas para esta planilha, numa aba chamada "Respostas";
  * - grava na aba "Config" o link do formulário e o link pré-preenchido, que o site usa.
  *
- * Rodar de novo cria outro formulário. Para incluir alguém novo, adicione o nome na
- * aba Presentes e rode atualizarNomes.
+ * Rodar de novo refaz as perguntas do mesmo formulário (as respostas continuam na planilha).
+ * Para incluir alguém novo, adicione o nome na aba Presentes e rode atualizarNomes.
  */
+
+// Formulário que você criou. Deixe vazio ('') para o script criar um novo.
+const FORM_ID = '1BcN92igTrtI7cQS_vjzlnN68iDQsAvYKVNavwo_jNCU';
 
 const ABA_PARTICIPANTES = 'Presentes';
 const ABA_RESPOSTAS = 'Respostas';
@@ -26,7 +30,9 @@ function criarFormulario() {
   const nomes = lerNomes_(ss);
   if (!nomes.length) throw new Error('Nenhum nome na aba ' + ABA_PARTICIPANTES + '.');
 
-  const form = FormApp.create('Amigo oculto de Natal: minhas sugestões');
+  const form = FORM_ID ? FormApp.openById(FORM_ID) : FormApp.create('x');
+  form.getItems().forEach(function (it) { form.deleteItem(it); });
+  form.setTitle('Amigo oculto de Natal: minhas sugestões');
   form.setDescription(
     'Escolha seu nome e deixe suas sugestões de presente. ' +
     'Quer adicionar mais? É só enviar o formulário de novo.'
@@ -49,7 +55,13 @@ function criarFormulario() {
       .setHelpText('Cole o link do produto (opcional)');
   }
 
-  form.setDestination(FormApp.DestinationType.SPREADSHEET, ss.getId());
+  let jaVinculado = false;
+  try { jaVinculado = form.getDestinationId() === ss.getId(); } catch (e) {}
+  if (!jaVinculado) {
+    try { form.removeDestination(); } catch (e) {}
+    form.setDestination(FormApp.DestinationType.SPREADSHEET, ss.getId());
+  }
+  form.setAcceptingResponses(true);
   SpreadsheetApp.flush();
   Utilities.sleep(3000);
 
@@ -57,7 +69,9 @@ function criarFormulario() {
   const ssAtual = SpreadsheetApp.openById(ss.getId());
   const abaForm = ssAtual.getSheets().find(function (s) {
     const url = s.getFormUrl();
-    return url && url.indexOf(form.getId()) !== -1;
+    if (!url) return false;
+    if (url.indexOf(form.getId()) !== -1) return true;
+    try { return FormApp.openByUrl(url).getId() === form.getId(); } catch (e) { return false; }
   });
   let abaRespostas = ABA_RESPOSTAS;
   if (abaForm) {
@@ -89,7 +103,7 @@ function criarFormulario() {
   Logger.log('Formulário para enviar ao grupo: ' + linkForm);
   Logger.log('Editar o formulário: ' + form.getEditUrl());
   SpreadsheetApp.getUi().alert(
-    'Formulário criado!\n\nLink para o grupo:\n' + linkForm +
+    'Formulário pronto e vinculado à planilha!\n\nLink para o grupo:\n' + linkForm +
     '\n\nO link também ficou na aba "' + ABA_CONFIG + '".'
   );
 }
