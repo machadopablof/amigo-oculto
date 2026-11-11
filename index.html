@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Amigo oculto de Natal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f1f5f2;
+  --surface: #ffffff;
+  --ink: #12302a;
+  --muted: #5d736c;
+  --line: #d5e0da;
+  --accent: #b3243b;
+  --accent-ink: #ffffff;
+  --pine: #1c5a48;
+  --font-display: "Bricolage Grotesque", "Trebuchet MS", system-ui, sans-serif;
+  --font-body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e211c; --surface: #16302a; --ink: #eaf3ee; --muted: #9db5ac;
+    --line: #27473e; --accent: #e8566c; --accent-ink: #1a0a0d; --pine: #7fcbb0;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e211c; --surface: #16302a; --ink: #eaf3ee; --muted: #9db5ac;
+  --line: #27473e; --accent: #e8566c; --accent-ink: #1a0a0d; --pine: #7fcbb0;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 16px; line-height: 1.45; }
+.wrap { max-width: 560px; margin: 0 auto; padding: 28px 16px 40px; display: flex; flex-direction: column; gap: 24px; }
+header { display: flex; flex-direction: column; gap: 8px; }
+.lights { display: flex; gap: 10px; }
+.lights span { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
+.lights span:nth-child(even) { background: var(--pine); }
+h1 { margin: 0; font-family: var(--font-display); font-weight: 800; font-size: 2rem; line-height: 1.1; text-wrap: balance; }
+.sub { margin: 0; color: var(--muted); }
+.edit {
+  align-self: flex-start; display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 4px; min-height: 40px; padding: 8px 14px; border-radius: 999px;
+  border: 1px solid var(--pine); color: var(--pine); font-weight: 600; text-decoration: none;
+}
+.edit:focus-visible { outline: 3px solid var(--pine); outline-offset: 2px; }
+.people { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.person { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.person.empty { background: transparent; border-style: dashed; }
+.head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+h2 { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 1.25rem; }
+.waiting { margin: 0; color: var(--muted); font-size: 0.9375rem; }
+.gifts { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.gifts a, .gifts .nolink {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  min-height: 48px; padding: 10px 14px; border-radius: 10px;
+  background: var(--accent); color: var(--accent-ink); font-weight: 600; text-decoration: none;
+}
+.gifts .nolink { background: transparent; color: var(--ink); border: 1px solid var(--line); }
+.gifts a:focus-visible { outline: 3px solid var(--pine); outline-offset: 2px; }
+.gifts .store { font-weight: 500; font-size: 0.875rem; opacity: 0.9; white-space: nowrap; }
+.status { margin: 0; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--line); color: var(--muted); font-size: 0.9375rem; }
+footer { color: var(--muted); font-size: 0.875rem; display: flex; flex-direction: column; gap: 4px; }
+footer p { margin: 0; }
+footer button { font: inherit; color: var(--pine); background: none; border: 0; padding: 0; text-decoration: underline; cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="lights" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+    <h1>Amigo oculto de Natal</h1>
+    <p class="sub">Lista de sugestões de presente. Toque em uma sugestão para abrir o produto.</p>
+    <a class="edit" id="edit-link" target="_blank" rel="noopener">✎ Adicionar minhas sugestões</a>
+  </header>
+
+  <p class="status" id="status" hidden></p>
+  <ul class="people" id="people" aria-live="polite"></ul>
+
+  <footer>
+    <p id="summary"></p>
+    <p><span id="updated"></span> <button type="button" id="refresh">Atualizar agora</button></p>
+  </footer>
+</div>
+
+<script>
+/*
+ * CONFIGURAÇÃO
+ * A lista vem da planilha do Google abaixo. Colunas: Nome | Presente | Link | Loja
+ * - Uma linha por presente. Repita o nome para adicionar mais de um.
+ * - Uma linha só com o Nome mostra a pessoa como "Ainda sem sugestões".
+ * - "Loja" é opcional: se ficar vazia, o site descobre pelo link.
+ * A planilha precisa estar compartilhada como "Qualquer pessoa com o link".
+ */
+const SHEET_ID = "1X9mC3HA2twC6HrUx4U5Kei5QBo5o0_qY4nrX5s87qUM";
+const SHEET_TAB = ""; // nome da aba; vazio = primeira aba
+const REFRESH_MS = 60 * 1000;
+
+const CSV_URL = "https://docs.google.com/spreadsheets/d/" + SHEET_ID +
+  "/gviz/tq?tqx=out:csv" + (SHEET_TAB ? "&sheet=" + encodeURIComponent(SHEET_TAB) : "");
+const EDIT_URL = "https://docs.google.com/spreadsheets/d/" + SHEET_ID + "/edit";
+
+const $ = (id) => document.getElementById(id);
+$("edit-link").href = EDIT_URL;
+
+function parseCSV(text) {
+  const rows = [];
+  let row = [], field = "", quoted = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (quoted) {
+      if (c === '"') {
+        if (text[i + 1] === '"') { field += '"'; i++; } else quoted = false;
+      } else field += c;
+    } else if (c === '"') quoted = true;
+    else if (c === ",") { row.push(field); field = ""; }
+    else if (c === "\n" || c === "\r") {
+      if (c === "\r" && text[i + 1] === "\n") i++;
+      row.push(field); rows.push(row); row = []; field = "";
+    } else field += c;
+  }
+  if (field !== "" || row.length) { row.push(field); rows.push(row); }
+  return rows;
+}
+
+const norm = (s) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").trim().toLowerCase();
+
+function storeFromUrl(url) {
+  try {
+    const host = new URL(url).hostname.replace(/^www\./, "");
+    const known = [
+      ["shp.ee", "Shopee"], ["shopee", "Shopee"], ["mercadolivre", "Mercado Livre"],
+      ["mercadolibre", "Mercado Livre"], ["meli.la", "Mercado Livre"], ["amazon", "Amazon"],
+      ["amzn", "Amazon"], ["magazineluiza", "Magalu"], ["magalu", "Magalu"],
+      ["aliexpress", "AliExpress"], ["shein", "Shein"], ["americanas", "Americanas"],
+      ["netshoes", "Netshoes"], ["centauro", "Centauro"], ["kabum", "KaBuM!"],
+      ["casasbahia", "Casas Bahia"], ["renner", "Renner"], ["riachuelo", "Riachuelo"],
+      ["cea.com", "C&A"], ["zara", "Zara"], ["natura", "Natura"], ["boticario", "O Boticário"],
+      ["sephora", "Sephora"], ["temu", "Temu"]
+    ];
+    for (const [k, v] of known) if (host.includes(k)) return v;
+    return host.split(".")[0].replace(/^./, (m) => m.toUpperCase());
+  } catch { return ""; }
+}
+
+function toPeople(rows) {
+  if (!rows.length) return [];
+  const header = rows[0].map(norm);
+  const col = (names, fallback) => {
+    const i = header.findIndex((h) => names.some((n) => h.startsWith(n)));
+    return i >= 0 ? i : fallback;
+  };
+  const iName = col(["nome", "participante", "pessoa"], 0);
+  const iGift = col(["presente", "sugest", "item", "produto"], 1);
+  const iLink = col(["link", "url"], 2);
+  const iStore = col(["loja", "site"], 3);
+
+  const map = new Map();
+  for (const r of rows.slice(1)) {
+    const name = (r[iName] || "").trim();
+    if (!name) continue;
+    const key = norm(name);
+    if (!map.has(key)) map.set(key, { name, gifts: [] });
+    const gift = (r[iGift] || "").trim();
+    let link = (r[iLink] || "").trim();
+    if (link && !/^https?:\/\//i.test(link)) link = "https://" + link;
+    if (!gift && !link) continue;
+    const store = (r[iStore] || "").trim() || (link ? storeFromUrl(link) : "");
+    map.get(key).gifts.push({ gift: gift || store || "Sugestão", link, store });
+  }
+  return [...map.values()].sort((a, b) => (b.gifts.length > 0) - (a.gifts.length > 0));
+}
+
+function el(tag, cls, text) {
+  const e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text != null) e.textContent = text;
+  return e;
+}
+
+function render(people) {
+  const list = $("people");
+  list.replaceChildren();
+  for (const p of people) {
+    const li = el("li", "person" + (p.gifts.length ? "" : " empty"));
+    const head = el("div", "head");
+    head.append(el("h2", null, p.name));
+    li.append(head);
+    if (!p.gifts.length) {
+      li.append(el("p", "waiting", "Ainda sem sugestões"));
+    } else {
+      const ul = el("ul", "gifts");
+      for (const g of p.gifts) {
+        const item = el("li");
+        const box = g.link ? el("a") : el("div", "nolink");
+        if (g.link) { box.href = g.link; box.target = "_blank"; box.rel = "noopener"; }
+        box.append(el("span", null, g.gift));
+        if (g.store || g.link) box.append(el("span", "store", (g.store || "") + (g.link ? " ↗" : "")));
+        item.append(box);
+        ul.append(item);
+      }
+      li.append(ul);
+    }
+    list.append(li);
+  }
+  const withGifts = people.filter((p) => p.gifts.length).length;
+  $("summary").textContent = people.length
+    ? `${people.length} participantes, ${withGifts} já ${withGifts === 1 ? "enviou" : "enviaram"} sugestões.`
+    : "";
+}
+
+function showStatus(msg) {
+  const s = $("status");
+  s.textContent = msg || "";
+  s.hidden = !msg;
+}
+
+let loadedOnce = false;
+async function load() {
+  if (!loadedOnce) showStatus("Carregando a lista…");
+  try {
+    const res = await fetch(CSV_URL + "&_=" + Date.now(), { cache: "no-store" });
+    const text = await res.text();
+    if (!res.ok || /^\s*</.test(text)) throw new Error("sem acesso");
+    const people = toPeople(parseCSV(text));
+    render(people);
+    loadedOnce = true;
+    showStatus(people.length ? "" : "A planilha ainda está vazia. Adicione seu nome e suas sugestões!");
+    $("updated").textContent = "Atualizado às " +
+      new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }) + ".";
+  } catch (e) {
+    if (!loadedOnce) showStatus("Não foi possível ler a planilha. Confira se ela está compartilhada como “Qualquer pessoa com o link”.");
+  }
+}
+
+$("refresh").addEventListener("click", load);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) load(); });
+setInterval(() => { if (!document.hidden) load(); }, REFRESH_MS);
+load();
+</script>
+</body>
+</html>
