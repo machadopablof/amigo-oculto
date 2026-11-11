@@ -34,6 +34,15 @@ function criarFormulario() {
   if (!nomes.length) throw new Error('Nenhum nome na aba ' + ABA_PARTICIPANTES + '.');
 
   const form = FORM_ID ? FormApp.openById(FORM_ID) : FormApp.create('x');
+  // Se o formulário já tem as perguntas, só atualiza os nomes: refazer as perguntas
+  // cria colunas repetidas na aba de respostas.
+  const existente = form.getItems(FormApp.ItemType.LIST)
+    .filter(function (it) { return it.getTitle() === 'Nome'; })[0];
+  if (existente) {
+    existente.asListItem().setChoiceValues(nomes);
+    avisar_('O formulário já estava montado. Atualizei só a lista de nomes.');
+    return;
+  }
   form.getItems().forEach(function (it) { form.deleteItem(it); });
   form.setTitle('Amigo oculto de Natal: minhas sugestões');
   form.setDescription(

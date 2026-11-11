@@ -199,7 +199,7 @@ const CONFIG_TAB = "Config";
 const cfg = { form_url: FORM_URL, prefill_url: FORM_PREFILL_URL, responses_tab: RESPONSES_TAB };
 
 const csvUrl = (tab) => "https://docs.google.com/spreadsheets/d/" + SHEET_ID +
-  "/gviz/tq?tqx=out:csv&sheet=" + encodeURIComponent(tab);
+  "/gviz/tq?tqx=out:csv&headers=1&sheet=" + encodeURIComponent(tab);
 const EDIT_URL = "https://docs.google.com/spreadsheets/d/" + SHEET_ID + "/edit";
 
 const $ = (id) => document.getElementById(id);
@@ -293,34 +293,49 @@ function addRows(map, rows) {
   if (!rows.length) return;
   const header = rows[0].map(norm);
   const has = (h, names) => names.some((n) => h.startsWith(n));
-  let iName = header.findIndex((h) => has(h, ["nome", "participante", "pessoa", "quem"]));
-  const slots = [];
+  const isName = (h) => has(h, ["nome", "participante", "pessoa", "quem"]);
+
+  // Cada coluna "Nome" abre um bloco (o Forms repete as colunas quando as perguntas são refeitas).
+  const blocks = [];
   header.forEach((h, i) => {
-    if (has(h, ["presente", "sugest", "item", "produto", "o que"])) slots.push({ gift: i, link: -1, store: -1 });
-    else if (has(h, ["link", "url"]) && slots.length) slots[slots.length - 1].link = i;
-    else if (has(h, ["loja"]) && slots.length) slots[slots.length - 1].store = i;
+    if (isName(h)) { blocks.push({ name: i, slots: [] }); return; }
+    const blk = blocks[blocks.length - 1];
+    if (!blk) return;
+    if (has(h, ["presente", "sugest", "item", "produto", "o que"])) blk.slots.push({ gift: i, link: -1, store: -1 });
+    else if (has(h, ["link", "url"]) && blk.slots.length) blk.slots[blk.slots.length - 1].link = i;
+    else if (has(h, ["loja"]) && blk.slots.length) blk.slots[blk.slots.length - 1].store = i;
   });
-  if (iName < 0 && !slots.length) { iName = 0; slots.push({ gift: 1, link: 2, store: 3 }); }
-  if (iName < 0) return;
+  if (!blocks.length) blocks.push({ name: 0, slots: [{ gift: 1, link: 2, store: 3 }] });
 
   for (const r of rows.slice(1)) {
-    const name = (r[iName] || "").trim();
-    if (!name) continue;
-    const key = norm(name);
-    if (!map.has(key)) map.set(key, { name, gifts: [], seen: new Set() });
-    const person = map.get(key);
-    for (const s of slots) {
-      const gift = (r[s.gift] || "").trim();
-      let link = s.link >= 0 ? (r[s.link] || "").trim() : "";
-      if (link && !/^https?:\/\//i.test(link)) link = "https://" + link;
-      if (!gift && !link) continue;
-      const dedupe = norm(gift) + "|" + link;
-      if (person.seen.has(dedupe)) continue;
-      person.seen.add(dedupe);
-      const store = (s.store >= 0 ? (r[s.store] || "").trim() : "") || (link ? storeFromUrl(link) : "");
-      person.gifts.push({ gift: gift || store || "Sugestão", link, store });
+    for (const blk of blocks) {
+      const name = (r[blk.name] || "").trim();
+      if (!name) continue;
+      const key = norm(name);
+      if (!map.has(key)) map.set(key, { name, gifts: [], seen: new Set() });
+      const person = map.get(key);
+      for (const s of blk.slots) {
+        const gift = (r[s.gift] || "").trim();
+        const link = cleanLink(s.link >= 0 ? r[s.link] : "");
+        if (!gift && !link) continue;
+        const dedupe = norm(gift) + "|" + link;
+        if (person.seen.has(dedupe)) continue;
+        person.seen.add(dedupe);
+        const store = (s.store >= 0 ? (r[s.store] || "").trim() : "") || (link ? storeFromUrl(link) : "");
+        person.gifts.push({ gift: gift || store || "Sugestão", link, store });
+      }
     }
   }
+}
+
+// Aceita link puro, sem "https://", ou a mensagem inteira de "compartilhar" do app da loja.
+function cleanLink(raw) {
+  const t = (raw || "").trim();
+  if (!t) return "";
+  const m = t.match(/https?:\/\/[^\s"'<>]+/i);
+  if (m) return m[0].replace(/[).,;!]+$/, "");
+  if (/^[\w-]+(\.[\w-]+)+(\/\S*)?$/.test(t)) return "https://" + t;
+  return "";
 }
 
 function toPeople(tables) {
