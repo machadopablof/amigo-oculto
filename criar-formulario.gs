@@ -71,7 +71,6 @@ function criarFormulario() {
     throw new Error('Não consegui publicar o formulário. Abra o formulário, clique em "Publicar" ' +
       'no canto superior direito e rode o script de novo. (' + e.message + ')');
   }
-  try { form.setAcceptingResponses(true); } catch (e) { Logger.log('Aviso: ' + e.message); }
   SpreadsheetApp.flush();
   Utilities.sleep(3000);
 
