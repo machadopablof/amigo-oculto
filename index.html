@@ -6,88 +6,168 @@
 <title>Amigo oculto de Natal</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800&family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+/* Natal: faixa noturna verde-pinheiro com neve e luzinhas; cartões como etiquetas de presente. */
 :root {
-  --bg: #f1f5f2;
+  --bg: #fbf6ee;
   --surface: #ffffff;
-  --ink: #12302a;
-  --muted: #5d736c;
-  --line: #d5e0da;
+  --ink: #1d2a24;
+  --muted: #5f6f67;
+  --line: #e8dccb;
   --accent: #b3243b;
+  --accent-deep: #8e1a2d;
   --accent-ink: #ffffff;
   --pine: #1c5a48;
-  --font-display: "Bricolage Grotesque", "Trebuchet MS", system-ui, sans-serif;
+  --gold: #b8862b;
+  --night: #0f3b2e;
+  --night-2: #0a2a21;
+  --night-ink: #f7f1e6;
+  --night-muted: #c4d6cc;
+  --gold-bright: #f2c14e;
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
   --font-body: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0e211c; --surface: #16302a; --ink: #eaf3ee; --muted: #9db5ac;
-    --line: #27473e; --accent: #e8566c; --accent-ink: #1a0a0d; --pine: #7fcbb0;
+    --bg: #0c1f19; --surface: #13302a; --ink: #f1ece2; --muted: #a9bdb3;
+    --line: #26473d; --accent: #d93a52; --accent-deep: #b3243b; --accent-ink: #ffffff;
+    --pine: #8fd3b8; --gold: #f2c14e; --night: #0a2a21; --night-2: #061a14;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0e211c; --surface: #16302a; --ink: #eaf3ee; --muted: #9db5ac;
-  --line: #27473e; --accent: #e8566c; --accent-ink: #1a0a0d; --pine: #7fcbb0;
+  --bg: #0c1f19; --surface: #13302a; --ink: #f1ece2; --muted: #a9bdb3;
+  --line: #26473d; --accent: #d93a52; --accent-deep: #b3243b; --accent-ink: #ffffff;
+  --pine: #8fd3b8; --gold: #f2c14e; --night: #0a2a21; --night-2: #061a14;
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
 body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 16px; line-height: 1.45; }
-.wrap { max-width: 560px; margin: 0 auto; padding: 28px 16px 40px; display: flex; flex-direction: column; gap: 24px; }
-header { display: flex; flex-direction: column; gap: 8px; }
-.lights { display: flex; gap: 10px; }
-.lights span { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
-.lights span:nth-child(even) { background: var(--pine); }
-h1 { margin: 0; font-family: var(--font-display); font-weight: 800; font-size: 2rem; line-height: 1.1; text-wrap: balance; }
-.sub { margin: 0; color: var(--muted); }
-.edit {
-  align-self: flex-start; display: inline-flex; align-items: center; gap: 6px;
-  margin-top: 4px; min-height: 40px; padding: 8px 14px; border-radius: 999px;
-  border: 1px solid var(--pine); color: var(--pine); font-weight: 600; text-decoration: none;
+
+/* Faixa do topo */
+.hero {
+  position: relative; overflow: hidden; isolation: isolate;
+  background: radial-gradient(120% 90% at 50% 0%, var(--night) 0%, var(--night-2) 100%);
+  color: var(--night-ink);
+  padding: 0 16px 56px;
 }
-.edit:focus-visible { outline: 3px solid var(--pine); outline-offset: 2px; }
-.people { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
-.person { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
-.person.empty { background: transparent; border-style: dashed; }
-.head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-h2 { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 1.25rem; }
-.add { font-size: 0.875rem; font-weight: 600; color: var(--pine); text-decoration: none; border: 1px solid currentColor; border-radius: 999px; padding: 4px 12px; }
+.hero::after { /* montinho de neve na borda de baixo */
+  content: ""; position: absolute; left: -5%; right: -5%; bottom: -1px; height: 34px; z-index: 1;
+  background: var(--bg);
+  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+}
+.lights { display: block; width: 100%; max-width: 640px; height: auto; margin: 0 auto; }
+.lights path { fill: none; stroke: #2c4a3f; stroke-width: 2; }
+.lights .cap { fill: #6b7a72; }
+.bulb { animation: twinkle 2.4s ease-in-out infinite; }
+.bulb:nth-of-type(4n+1) { fill: #ff4d5e; animation-delay: 0s; }
+.bulb:nth-of-type(4n+2) { fill: #ffd25e; animation-delay: .6s; }
+.bulb:nth-of-type(4n+3) { fill: #4fe0a0; animation-delay: 1.2s; }
+.bulb:nth-of-type(4n)   { fill: #6cc4ff; animation-delay: 1.8s; }
+@keyframes twinkle { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+.hero-inner { position: relative; z-index: 2; max-width: 560px; margin: 0 auto; padding-top: 12px; display: flex; flex-direction: column; gap: 10px; }
+.kicker { margin: 0; color: var(--gold-bright); font-weight: 700; letter-spacing: .14em; text-transform: uppercase; font-size: .8125rem; display: flex; align-items: center; gap: 8px; }
+.kicker svg { width: 16px; height: 16px; fill: currentColor; }
+h1 { margin: 0; font-family: var(--font-display); font-weight: 800; font-size: clamp(2.1rem, 8vw, 2.9rem); line-height: 1.05; text-wrap: balance; }
+.sub { margin: 0; color: var(--night-muted); max-width: 42ch; }
+.edit {
+  align-self: flex-start; display: inline-flex; align-items: center; gap: 8px;
+  margin-top: 6px; min-height: 48px; padding: 10px 18px; border-radius: 999px;
+  background: var(--gold-bright); color: #2a1d05; font-weight: 700; text-decoration: none;
+  box-shadow: 0 6px 18px rgba(0,0,0,.25);
+}
+.edit svg { width: 18px; height: 18px; fill: currentColor; }
+.edit:hover { filter: brightness(1.05); }
+.edit:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+
+/* Neve */
+.snow { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+.snow i {
+  position: absolute; top: -10px; border-radius: 50%; background: #fff;
+  animation: fall linear infinite;
+}
+@keyframes fall {
+  from { transform: translate3d(0, -10px, 0); }
+  to   { transform: translate3d(var(--drift, 20px), 360px, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bulb, .snow i { animation: none; }
+  .snow { display: none; }
+}
+
+/* Conteúdo */
+.wrap { max-width: 560px; margin: -8px auto 0; padding: 0 16px 40px; display: flex; flex-direction: column; gap: 20px; position: relative; z-index: 3; }
+.people { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+.person {
+  position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 16px;
+  padding: 16px 16px 16px 22px; display: flex; flex-direction: column; gap: 12px;
+  box-shadow: 0 1px 0 rgba(0,0,0,.02), 0 8px 20px -14px rgba(60,30,10,.35);
+}
+.person::before { /* fita do presente */
+  content: ""; position: absolute; left: 0; top: 14px; bottom: 14px; width: 6px; border-radius: 0 6px 6px 0;
+  background: repeating-linear-gradient(180deg, var(--accent) 0 10px, var(--gold) 10px 14px);
+}
+.person.empty { background: transparent; border-style: dashed; box-shadow: none; }
+.person.empty::before { background: var(--line); }
+.head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.who { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.who svg { flex: none; width: 24px; height: 24px; }
+.person .who svg { color: var(--accent); }
+.person.empty .who svg { color: var(--muted); }
+h2 { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 1.3rem; line-height: 1.2; }
+.add {
+  display: inline-flex; align-items: center; min-height: 36px;
+  font-size: .875rem; font-weight: 700; color: var(--pine); text-decoration: none;
+  border: 1.5px solid currentColor; border-radius: 999px; padding: 4px 14px;
+}
 .add:focus-visible { outline: 3px solid var(--pine); outline-offset: 2px; }
-.waiting { margin: 0; color: var(--muted); font-size: 0.9375rem; }
+.waiting { margin: 0; color: var(--muted); font-size: .9375rem; }
 .gifts { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .gifts a, .gifts .nolink {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  min-height: 48px; padding: 10px 14px; border-radius: 10px;
-  background: var(--accent); color: var(--accent-ink); font-weight: 600; text-decoration: none;
+  min-height: 48px; padding: 10px 14px; border-radius: 12px;
+  background: linear-gradient(180deg, var(--accent), var(--accent-deep));
+  color: var(--accent-ink); font-weight: 600; text-decoration: none;
 }
+.gifts a:hover { filter: brightness(1.06); }
 .gifts .nolink { background: transparent; color: var(--ink); border: 1px solid var(--line); }
-.gifts a:focus-visible { outline: 3px solid var(--pine); outline-offset: 2px; }
-.gifts .store { font-weight: 500; font-size: 0.875rem; opacity: 0.9; white-space: nowrap; }
-.status { margin: 0; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--line); color: var(--muted); font-size: 0.9375rem; }
-footer { color: var(--muted); font-size: 0.875rem; display: flex; flex-direction: column; gap: 4px; }
+.gifts a:focus-visible { outline: 3px solid var(--gold); outline-offset: 2px; }
+.gifts .store { font-weight: 600; font-size: .8125rem; white-space: nowrap; background: rgba(255,255,255,.18); padding: 3px 10px; border-radius: 999px; }
+.gifts .nolink .store { background: transparent; color: var(--muted); }
+.status { margin: 0; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); font-size: .9375rem; }
+footer { color: var(--muted); font-size: .875rem; display: flex; flex-direction: column; gap: 4px; text-align: center; padding-top: 8px; }
 footer p { margin: 0; }
-footer button { font: inherit; color: var(--pine); background: none; border: 0; padding: 0; text-decoration: underline; cursor: pointer; }
+footer .bye { font-family: var(--font-display); font-size: 1.1rem; color: var(--accent); font-weight: 600; margin-bottom: 4px; }
+footer button { font: inherit; color: var(--pine); background: none; border: 0; padding: 4px; text-decoration: underline; cursor: pointer; }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <div class="lights" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+<header class="hero">
+  <div class="snow" id="snow" aria-hidden="true"></div>
+  <svg class="lights" viewBox="0 0 400 44" aria-hidden="true">
+    <path d="M0 6 Q25 26 50 6 T100 6 T150 6 T200 6 T250 6 T300 6 T350 6 T400 6"/>
+    <g id="bulbs"></g>
+  </svg>
+  <div class="hero-inner">
+    <p class="kicker"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.4 5.6L20 8.3l-4.3 3.9L17 18l-5-3-5 3 1.3-5.8L4 8.3l5.6-.7z"/></svg>Natal em família</p>
     <h1>Amigo oculto de Natal</h1>
     <p class="sub">Lista de sugestões de presente. Toque em uma sugestão para abrir o produto.</p>
-    <a class="edit" id="edit-link" target="_blank" rel="noopener">✎ Adicionar minhas sugestões</a>
-  </header>
+    <a class="edit" id="edit-link" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 7h-2.2A3 3 0 0 0 12 4.4 3 3 0 0 0 6.2 7H4a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h1v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-8h1a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1zM15 6a1 1 0 1 1 0 2h-2a2 2 0 0 1 2-2zM9 6a2 2 0 0 1 2 2H9a1 1 0 1 1 0-2zm-4 3h6v1H5zm2 3h4v7H7zm10 7h-4v-7h4zm2-9h-6V9h6z"/></svg>Adicionar minhas sugestões</a>
+  </div>
+</header>
 
+<main class="wrap">
   <p class="status" id="status" hidden></p>
   <ul class="people" id="people" aria-live="polite"></ul>
 
   <footer>
+    <p class="bye">Feliz Natal! 🎄</p>
     <p id="summary"></p>
     <p><span id="updated"></span> <button type="button" id="refresh">Atualizar agora</button></p>
   </footer>
-</div>
+</main>
 
 <script>
 /*
@@ -123,6 +203,35 @@ const csvUrl = (tab) => "https://docs.google.com/spreadsheets/d/" + SHEET_ID +
 const EDIT_URL = "https://docs.google.com/spreadsheets/d/" + SHEET_ID + "/edit";
 
 const $ = (id) => document.getElementById(id);
+
+const ICON_GIFT = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20 7h-2.2A3 3 0 0 0 12 4.4 3 3 0 0 0 6.2 7H4a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h1v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-8h1a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1zM15 6a1 1 0 1 1 0 2h-2a2 2 0 0 1 2-2zM9 6a2 2 0 0 1 2 2H9a1 1 0 1 1 0-2zm-4 3h6v1H5zm2 3h4v7H7zm10 7h-4v-7h4zm2-9h-6V9h6z"/></svg>';
+const ICON_FLAKE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" d="M12 2v20M3.3 7l17.4 10M3.3 17L20.7 7M9 3.5l3 2.5 3-2.5M9 20.5l3-2.5 3 2.5M3.6 10.6l3.7-.6-1.3-3.6M20.4 13.4l-3.7.6 1.3 3.6M3.6 13.4l3.7.6-1.3 3.6M20.4 10.6l-3.7-.6 1.3-3.6"/></svg>';
+
+(function decorate() {
+  const NS = "http://www.w3.org/2000/svg";
+  const g = $("bulbs");
+  for (let x = 25; x < 400; x += 50) {
+    const cap = document.createElementNS(NS, "rect");
+    cap.setAttribute("class", "cap");
+    cap.setAttribute("x", x - 3); cap.setAttribute("y", 14); cap.setAttribute("width", 6); cap.setAttribute("height", 5); cap.setAttribute("rx", 1);
+    const b = document.createElementNS(NS, "ellipse");
+    b.setAttribute("class", "bulb");
+    b.setAttribute("cx", x); b.setAttribute("cy", 26); b.setAttribute("rx", 5.5); b.setAttribute("ry", 8);
+    g.append(cap, b);
+  }
+  const snow = $("snow");
+  for (let i = 0; i < 40; i++) {
+    const f = document.createElement("i");
+    const size = 2 + Math.random() * 4;
+    f.style.left = Math.random() * 100 + "%";
+    f.style.width = f.style.height = size + "px";
+    f.style.opacity = (0.35 + Math.random() * 0.6).toFixed(2);
+    f.style.animationDuration = (6 + Math.random() * 8).toFixed(1) + "s";
+    f.style.animationDelay = (-Math.random() * 12).toFixed(1) + "s";
+    f.style.setProperty("--drift", (Math.random() * 60 - 30).toFixed(0) + "px");
+    snow.append(f);
+  }
+})();
 const setEditLink = () => { $("edit-link").href = cfg.form_url || EDIT_URL; };
 setEditLink();
 
@@ -233,7 +342,10 @@ function render(people) {
   for (const p of people) {
     const li = el("li", "person" + (p.gifts.length ? "" : " empty"));
     const head = el("div", "head");
-    head.append(el("h2", null, p.name));
+    const who = el("div", "who");
+    who.innerHTML = p.gifts.length ? ICON_GIFT : ICON_FLAKE;
+    who.append(el("h2", null, p.name));
+    head.append(who);
     if (cfg.prefill_url) {
       const add = el("a", "add", "+ sugerir");
       add.href = cfg.prefill_url.replace("NOME", encodeURIComponent(p.name));
