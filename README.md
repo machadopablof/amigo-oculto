@@ -23,3 +23,14 @@ Para usar outra planilha, troque `SHEET_ID` no `index.html`.
 ## Publicar
 
 GitHub → Settings → Pages → Deploy from a branch → escolha a branch e a pasta `/ (root)`.
+
+## Google Forms (opcional)
+
+1. Crie um formulário com as perguntas **Nome** (lista suspensa com os participantes),
+   **Presente 1**, **Link 1**, **Presente 2**, **Link 2**... (resposta curta; só o Nome obrigatório).
+2. Em **Respostas → Vincular ao Planilhas → Selecionar planilha existente**, escolha esta planilha.
+   O Forms cria a aba `Respostas ao formulário 1`, que o site também lê.
+3. No `index.html`, preencha `FORM_URL` com o link do formulário. Para um botão "+ sugerir"
+   em cada pessoa, gere um link pré-preenchido com `NOME` no campo Nome e cole em `FORM_PREFILL_URL`.
+
+Para corrigir ou apagar uma sugestão enviada pelo formulário, edite a aba de respostas na planilha.

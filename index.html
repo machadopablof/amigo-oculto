@@ -53,6 +53,8 @@ h1 { margin: 0; font-family: var(--font-display); font-weight: 800; font-size: 2
 .person.empty { background: transparent; border-style: dashed; }
 .head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 h2 { margin: 0; font-family: var(--font-display); font-weight: 600; font-size: 1.25rem; }
+.add { font-size: 0.875rem; font-weight: 600; color: var(--pine); text-decoration: none; border: 1px solid currentColor; border-radius: 999px; padding: 4px 12px; }
+.add:focus-visible { outline: 3px solid var(--pine); outline-offset: 2px; }
 .waiting { margin: 0; color: var(--muted); font-size: 0.9375rem; }
 .gifts { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
 .gifts a, .gifts .nolink {
@@ -97,15 +99,26 @@ footer button { font: inherit; color: var(--pine); background: none; border: 0; 
  * A planilha precisa estar compartilhada como "Qualquer pessoa com o link".
  */
 const SHEET_ID = "1X9mC3HA2twC6HrUx4U5Kei5QBo5o0_qY4nrX5s87qUM";
-const SHEET_TAB = "Presentes"; // nome da aba; vazio = primeira aba
+const SHEET_TAB = "Presentes"; // aba com os participantes (e presentes digitados à mão)
 const REFRESH_MS = 60 * 1000;
 
-const CSV_URL = "https://docs.google.com/spreadsheets/d/" + SHEET_ID +
-  "/gviz/tq?tqx=out:csv" + (SHEET_TAB ? "&sheet=" + encodeURIComponent(SHEET_TAB) : "");
+/*
+ * GOOGLE FORMS (opcional)
+ * FORM_URL: link do formulário (botão "Enviar"). Se ficar vazio, o botão abre a planilha.
+ * FORM_PREFILL_URL: link "pré-preenchido" do formulário com NOME escrito no campo Nome.
+ *   Cada participante ganha um botão que já abre o formulário com o nome dele.
+ * RESPONSES_TAB: aba que o Forms cria na planilha ao vincular as respostas.
+ */
+const FORM_URL = "";
+const FORM_PREFILL_URL = "";
+const RESPONSES_TAB = "Respostas ao formulário 1";
+
+const csvUrl = (tab) => "https://docs.google.com/spreadsheets/d/" + SHEET_ID +
+  "/gviz/tq?tqx=out:csv&sheet=" + encodeURIComponent(tab);
 const EDIT_URL = "https://docs.google.com/spreadsheets/d/" + SHEET_ID + "/edit";
 
 const $ = (id) => document.getElementById(id);
-$("edit-link").href = EDIT_URL;
+$("edit-link").href = FORM_URL || EDIT_URL;
 
 function parseCSV(text) {
   const rows = [];
@@ -147,31 +160,48 @@ function storeFromUrl(url) {
   } catch { return ""; }
 }
 
-function toPeople(rows) {
-  if (!rows.length) return [];
+/*
+ * Lê uma tabela (aba da planilha ou respostas do Forms) e junta no mapa de pessoas.
+ * Aceita vários presentes por linha: colunas "Presente 1", "Link 1", "Presente 2", "Link 2"...
+ * Cada "Link"/"Loja" pertence ao último "Presente" que veio antes dele.
+ */
+function addRows(map, rows) {
+  if (!rows.length) return;
   const header = rows[0].map(norm);
-  const col = (names, fallback) => {
-    const i = header.findIndex((h) => names.some((n) => h.startsWith(n)));
-    return i >= 0 ? i : fallback;
-  };
-  const iName = col(["nome", "participante", "pessoa"], 0);
-  const iGift = col(["presente", "sugest", "item", "produto"], 1);
-  const iLink = col(["link", "url"], 2);
-  const iStore = col(["loja", "site"], 3);
+  const has = (h, names) => names.some((n) => h.startsWith(n));
+  let iName = header.findIndex((h) => has(h, ["nome", "participante", "pessoa", "quem"]));
+  const slots = [];
+  header.forEach((h, i) => {
+    if (has(h, ["presente", "sugest", "item", "produto", "o que"])) slots.push({ gift: i, link: -1, store: -1 });
+    else if (has(h, ["link", "url"]) && slots.length) slots[slots.length - 1].link = i;
+    else if (has(h, ["loja"]) && slots.length) slots[slots.length - 1].store = i;
+  });
+  if (iName < 0 && !slots.length) { iName = 0; slots.push({ gift: 1, link: 2, store: 3 }); }
+  if (iName < 0) return;
 
-  const map = new Map();
   for (const r of rows.slice(1)) {
     const name = (r[iName] || "").trim();
     if (!name) continue;
     const key = norm(name);
-    if (!map.has(key)) map.set(key, { name, gifts: [] });
-    const gift = (r[iGift] || "").trim();
-    let link = (r[iLink] || "").trim();
-    if (link && !/^https?:\/\//i.test(link)) link = "https://" + link;
-    if (!gift && !link) continue;
-    const store = (r[iStore] || "").trim() || (link ? storeFromUrl(link) : "");
-    map.get(key).gifts.push({ gift: gift || store || "Sugestão", link, store });
+    if (!map.has(key)) map.set(key, { name, gifts: [], seen: new Set() });
+    const person = map.get(key);
+    for (const s of slots) {
+      const gift = (r[s.gift] || "").trim();
+      let link = s.link >= 0 ? (r[s.link] || "").trim() : "";
+      if (link && !/^https?:\/\//i.test(link)) link = "https://" + link;
+      if (!gift && !link) continue;
+      const dedupe = norm(gift) + "|" + link;
+      if (person.seen.has(dedupe)) continue;
+      person.seen.add(dedupe);
+      const store = (s.store >= 0 ? (r[s.store] || "").trim() : "") || (link ? storeFromUrl(link) : "");
+      person.gifts.push({ gift: gift || store || "Sugestão", link, store });
+    }
   }
+}
+
+function toPeople(tables) {
+  const map = new Map();
+  for (const rows of tables) addRows(map, rows);
   return [...map.values()].sort((a, b) => (b.gifts.length > 0) - (a.gifts.length > 0));
 }
 
@@ -189,6 +219,13 @@ function render(people) {
     const li = el("li", "person" + (p.gifts.length ? "" : " empty"));
     const head = el("div", "head");
     head.append(el("h2", null, p.name));
+    if (FORM_PREFILL_URL) {
+      const add = el("a", "add", "+ sugerir");
+      add.href = FORM_PREFILL_URL.replace("NOME", encodeURIComponent(p.name));
+      add.target = "_blank"; add.rel = "noopener";
+      add.setAttribute("aria-label", "Adicionar sugestões de " + p.name);
+      head.append(add);
+    }
     li.append(head);
     if (!p.gifts.length) {
       li.append(el("p", "waiting", "Ainda sem sugestões"));
@@ -222,11 +259,18 @@ function showStatus(msg) {
 let loadedOnce = false;
 async function load() {
   if (!loadedOnce) showStatus("Carregando a lista…");
-  try {
-    const res = await fetch(CSV_URL + "&_=" + Date.now(), { cache: "no-store" });
+  const fetchTab = async (tab) => {
+    const res = await fetch(csvUrl(tab) + "&_=" + Date.now(), { cache: "no-store" });
     const text = await res.text();
     if (!res.ok || /^\s*</.test(text)) throw new Error("sem acesso");
-    const people = toPeople(parseCSV(text));
+    return parseCSV(text);
+  };
+  try {
+    const [base, responses] = await Promise.all([
+      fetchTab(SHEET_TAB),
+      RESPONSES_TAB ? fetchTab(RESPONSES_TAB).catch(() => []) : Promise.resolve([])
+    ]);
+    const people = toPeople([base, responses]);
     render(people);
     loadedOnce = true;
     showStatus(people.length ? "" : "A planilha ainda está vazia. Adicione seu nome e suas sugestões!");
