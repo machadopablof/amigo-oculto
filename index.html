@@ -196,6 +196,11 @@ const FORM_PREFILL_URL = "";
 const RESPONSES_TAB = "Respostas ao formulário 1";
 const CONFIG_TAB = "Config";
 
+// Presentes escondidos do site mesmo que ainda estejam na planilha: [nome, começo do presente].
+const HIDDEN_GIFTS = [
+  ["Pablo", "Tela Monitoramento PC"],
+];
+
 const cfg = { form_url: FORM_URL, prefill_url: FORM_PREFILL_URL, responses_tab: RESPONSES_TAB };
 
 const csvUrl = (tab) => "https://docs.google.com/spreadsheets/d/" + SHEET_ID +
@@ -318,6 +323,7 @@ function addRows(map, rows) {
         const gift = (r[s.gift] || "").trim();
         const link = cleanLink(s.link >= 0 ? r[s.link] : "");
         if (!gift && !link) continue;
+        if (HIDDEN_GIFTS.some(([n, g]) => norm(n) === key && norm(gift).startsWith(norm(g)))) continue;
         const dedupe = norm(gift) + "|" + link;
         if (person.seen.has(dedupe)) continue;
         person.seen.add(dedupe);
