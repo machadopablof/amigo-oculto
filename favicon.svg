@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="14" fill="#0f3b2e"/>
+  <circle cx="12" cy="12" r="2" fill="#fff" opacity=".7"/>
+  <circle cx="53" cy="9" r="1.6" fill="#fff" opacity=".6"/>
+  <circle cx="56" cy="24" r="1.3" fill="#fff" opacity=".5"/>
+  <circle cx="8" cy="30" r="1.3" fill="#fff" opacity=".5"/>
+  <!-- laço -->
+  <path d="M32 21c-4-9-15-10-15-3 0 4 7 5 15 3z" fill="#f2c14e"/>
+  <path d="M32 21c4-9 15-10 15-3 0 4-7 5-15 3z" fill="#f2c14e"/>
+  <!-- tampa -->
+  <rect x="12" y="21" width="40" height="10" rx="2.5" fill="#d93a52"/>
+  <!-- caixa -->
+  <rect x="15" y="31" width="34" height="23" rx="2.5" fill="#b3243b"/>
+  <!-- fita -->
+  <rect x="28.5" y="21" width="7" height="33" fill="#f2c14e"/>
+  <circle cx="32" cy="21" r="3.2" fill="#e0a92f"/>
+</svg>
